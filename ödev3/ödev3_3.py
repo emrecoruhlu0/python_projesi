@@ -43,14 +43,33 @@ def gun_sayisi_hesapla(t1, t2):
 
     elif yil2 - yil1 > 0:
         """eğer yıllar farklıysa"""
+
         for i in range(ay1 + 1, 13):
             gun += aylar_gunler1[i]
-        """ilk tarihin başlangıcından o tarihin yılının 
+        """ilk tarihin başlangıç ayından yılın 
             sonuna kadarki ayların günleri eklenir"""
-        for i in range(1, ay2 + 1):
+
+        for i in range(1, ay2):
             gun += aylar_gunler2[i]
         """ikinci tarihin yılının başından o tarihe kadarki 
             tam ayların günleri eklenir"""
+
+        for i in range(gun1, aylar_gunler1[ay1] + 1):
+            gun += 1
+            """ilk tarihin başlangıcından aynın
+                sonuna kadarki günler eklenir
+                (*)"""
+
+        for i in range(1, gun2):
+            gun += 1
+            """ikinci tarihin aynın başından
+                o tarihin gününe kadarki günler eklenir
+                (**)"""
+
+        for i in range(ay1 + 1, ay2):
+            gun += aylar_gunler1[i]
+            """tarihlerin arasındaki tam ayların günleri eklenir
+                (***)"""
 
     else:
         """eğer tarihler aynı yıl içersindeyse"""
@@ -58,15 +77,13 @@ def gun_sayisi_hesapla(t1, t2):
             """farklı aylarsa"""
             for i in range(gun1, aylar_gunler1[ay1] + 1):
                 gun += 1
-                """ilk tarihin başlangıcından aynın
-                    sonuna kadarki günler eklenir"""
+                """bunun (*) aynısı"""
             for i in range(1, gun2):
                 gun += 1
-                """ikinci tarihin aynın başından
-                    o tarihin gününe kadarki günler eklenir"""
+                """bunun (**) aynısı"""
             for i in range(ay1 + 1, ay2):
                 gun += aylar_gunler1[i]
-                """tarihlerin arasındaki tam ayların günleri eklenir"""
+                """bunun (***) aynısı"""
         else:
             """aynı aylarsa direkt günler çıkarılır"""
             gun = gun2 - gun1
