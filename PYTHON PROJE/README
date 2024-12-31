@@ -1,9 +1,0 @@
-convertor.py veriseti üzerinde denediğim bazı fonksiyonlar
-
-data_handler.py veriseti üzerinden veri çekme, veri ekleme, silme fonksiyonları
-
-movie.py film nesnesi ve fonksiyonları
-
-son_movie.json film verisetinin en son hali
-
-son_movie.json.backup veriseti yedeği
