@@ -360,6 +360,7 @@ class FilmApp:
     def clear_window(self):
         for widget in self.root.winfo_children():
             widget.destroy()
+
     def save_json_data(self, file_path, data):
         try:
             with open(file_path, 'w', encoding='utf-8') as file:
@@ -415,12 +416,6 @@ class FilmApp:
                 continue
             temiz_filmler.append(film)
         return temiz_filmler
-
-    def show_genre(self, genre):
-        self.current_genre = genre
-        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
-        filtered_data = [item for item in data if genre in item['genre']]
-        self.display_table(filtered_data)
 
     def show_details(self):
         if not self.selected_item:
@@ -484,10 +479,6 @@ class FilmApp:
                 return json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             return []
-
-    def clear_window(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
 
 
 if __name__ == "__main__":

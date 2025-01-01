@@ -1,0 +1,34 @@
+[
+    {
+        "title": "Glass Onion: A Knives Out Mystery",
+        "year": "2022",
+        "genre": [
+            "Crime",
+            "Drama",
+            "Mystery"
+        ],
+        "IMBDrating": "8.1",
+        "stars": [
+            "Rian Johnson"
+        ],
+        "state": true,
+        "userRating": 0,
+        "note": ""
+    },
+    {
+        "title": "Raat Akeli Hai",
+        "year": "2020",
+        "genre": [
+            "Crime",
+            "Drama",
+            "Mystery"
+        ],
+        "IMBDrating": "7.2",
+        "stars": [
+            "Honey Trehan"
+        ],
+        "state": true,
+        "userRating": 0,
+        "note": ""
+    }
+]
