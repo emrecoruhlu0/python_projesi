@@ -1,16 +1,17 @@
 import json
 import time
-import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk
 import random
 import os
 from movie import FileManager
+
 # JSON dosyasındaki kullanıcı bilgileri
 USERS = {
     "a": "11",
     "user": "password"
 }
+
 
 class FilmApp:
     def __init__(self, root):
@@ -37,12 +38,13 @@ class FilmApp:
 
     def create_login_page(self):
         self.clear_window()
+        self.root.geometry("400x300")  # Giriş ekranının boyutunu küçült
         ttk.Label(self.root, text="Kullanıcı Adı:").pack(pady=5)
-        self.username_entry = ttk.Entry(self.root)
+        self.username_entry = ttk.Entry(self.root, font=("Helvetica", 14), width=25)
         self.username_entry.pack(pady=5)
 
         ttk.Label(self.root, text="Şifre:").pack(pady=5)
-        self.password_entry = ttk.Entry(self.root, show="*")
+        self.password_entry = ttk.Entry(self.root, show="*", font=("Helvetica", 14), width=25)
         self.password_entry.pack(pady=5)
 
         ttk.Button(self.root, text="Giriş", command=self.authenticate).pack(pady=20)
@@ -159,8 +161,8 @@ class FilmApp:
                                                                                                           column=0,
                                                                                                           padx=10,
                                                                                                           pady=20)
-        ttk.Button(self.right_frame, text="Listeleri Göster", command=self.show_lists).grid(row=4, column=0, padx=10, pady=20)
-
+        ttk.Button(self.right_frame, text="Listeleri Göster", command=self.show_lists).grid(row=4, column=0, padx=10,
+                                                                                            pady=20)
 
         # Orta çerçeve
         self.center_frame = tk.Frame(self.root, bg="#2C3E50")
@@ -305,7 +307,9 @@ class FilmApp:
         content_window.configure(bg="#2C3E50")
 
         # Tablo oluştur
-        tree = ttk.Treeview(content_window, columns=("title", "year", "IMBDrating", "genre", "stars", "rating", "comment", "watched"), show='headings')
+        tree = ttk.Treeview(content_window,
+                            columns=("title", "year", "IMBDrating", "genre", "stars", "rating", "comment", "watched"),
+                            show='headings')
         tree.heading("title", text="Başlık")
         tree.heading("year", text="Yıl")
         tree.heading("IMBDrating", text="IMDb Puanı")
@@ -375,7 +379,8 @@ class FilmApp:
 
         # Butonlar için grid kullanımı
         row, col = 0, 0
-        data = self.filter_data(self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
+        data = self.filter_data(
+            self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
         genres = sorted(set(genre for item in data for genre in item['genre']))
 
         for genre in genres:
@@ -391,12 +396,14 @@ class FilmApp:
 
     def show_genre(self, genre):
         self.current_genre = genre
-        data = self.filter_data(self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
+        data = self.filter_data(
+            self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
         filtered_data = [item for item in data if genre in item['genre']]
         self.display_table(filtered_data)
 
     def show_all(self):
-        data = self.filter_data(self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
+        data = self.filter_data(
+            self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
         self.display_table(data)
 
     def filter_data(self, data):
