@@ -30,5 +30,21 @@
         "state": true,
         "userRating": 0,
         "note": ""
+    },
+    {
+        "title": "El Camino: A Breaking Bad Movie",
+        "year": "2019",
+        "genre": [
+            "Action",
+            "Crime",
+            "Drama"
+        ],
+        "IMBDrating": "7.3",
+        "stars": [
+            "Vince Gilligan"
+        ],
+        "state": true,
+        "userRating": 0,
+        "note": ""
     }
 ]

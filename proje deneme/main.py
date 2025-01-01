@@ -38,7 +38,7 @@ class FilmApp:
 
     def create_login_page(self):
         self.clear_window()
-        self.root.geometry("400x300")  # Giriş ekranının boyutunu küçült
+        self.root.geometry("400x300")
         ttk.Label(self.root, text="Kullanıcı Adı:").pack(pady=5)
         self.username_entry = ttk.Entry(self.root, font=("Helvetica", 14), width=25)
         self.username_entry.pack(pady=5)
@@ -257,12 +257,14 @@ class FilmApp:
             file_path = os.path.join(user_folder, f"{list_name}.json")
             selected = result_list.get(tk.ACTIVE)
             if selected:
-                data = self.load_json_data(file_path) if os.path.exists(file_path) else []
+                # FileManager üzerinden dosyayı kontrol et ve ekle
+                manager = FileManager(file_path)
+                data = manager.get_movies()  # Mevcut verileri oku
                 for item in self.movies_manager.get_movies() + self.series_manager.get_movies():
                     if item['title'] == selected and item not in data:
                         data.append(item)
                         break
-                self.save_json_data(file_path, data)
+                manager.write_file(data)  # Dosyayı güncelle
                 messagebox.showinfo("Başarılı", f"{selected} listeye eklendi!")
 
         ttk.Button(add_window, text="Listeye Ekle", command=add_to_list).pack(pady=10)
@@ -479,13 +481,6 @@ class FilmApp:
     def select_item(self, event):
         selected_item = self.tree.selection()[0]
         self.selected_item = self.tree.item(selected_item, 'values')[0]
-
-    def load_json_data(self, file_path):
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                return json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return []
 
 
 if __name__ == "__main__":
