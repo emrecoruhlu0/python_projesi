@@ -5,36 +5,26 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import random
 import os
-
+from movie import FileManager
 # JSON dosyasındaki kullanıcı bilgileri
 USERS = {
     "a": "11",
     "user": "password"
 }
 
-
-
-
 class FilmApp:
     def __init__(self, root):
+        self.movies_manager = None
         self.root = root
         self.root.title("Film ve Dizi Yönetim Uygulaması")
         self.root.geometry("1000x700")
-        self.movies = self.load_json_data("filtered_films.json")
-        self.series = self.load_json_data("filtered_series.json")
+        self.movies_manager = FileManager("filtered_films.json")
+        self.series_manager = FileManager("filtered_series.json")
         self.current_genre = None
         self.selected_item = None
         self.active_category = 'movies'
         self.style_setup()
         self.create_login_page()
-
-    def switch_category(self, category):
-        self.active_category = category
-        if category == 'movies':
-            self.info_label.config(text=f"Toplam Filmler: {len(self.movies)}")
-        else:
-            self.info_label.config(text=f"Toplam Diziler: {len(self.series)}")
-        self.load_genres()
 
     def style_setup(self):
         self.root.configure(bg="#2C3E50")
@@ -71,7 +61,7 @@ class FilmApp:
             messagebox.showwarning("Uyarı", "Lütfen bir öğe seçin!")
             return
 
-        data = self.movies if self.active_category == 'movies' else self.series
+        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
         item = next((x for x in data if x['title'] == self.selected_item), None)
 
         if item:
@@ -116,7 +106,10 @@ class FilmApp:
                 item['rating'] = rating
                 item['comment'] = comment_entry.get("1.0", tk.END).strip()
                 item['watched'] = watched_var.get()
-                save_json_data()
+
+                # Güncelleme ve kaydetme işlemi
+                manager = self.movies_manager if self.active_category == 'movies' else self.series_manager
+                manager.write_file(data)  # JSON dosyasına yaz
                 review_window.destroy()
                 messagebox.showinfo("Başarılı", "Veriler kaydedildi!")
 
@@ -138,7 +131,7 @@ class FilmApp:
         ttk.Button(top_frame, text="Diziler", command=lambda: self.switch_category('series')).grid(row=0, column=1,
                                                                                                    padx=20, pady=10)
 
-        self.info_label = ttk.Label(top_frame, text=f"Toplam Filmler: {len(self.movies)}")
+        self.info_label = ttk.Label(top_frame, text=f"Toplam Filmler: {len(self.movies_manager.get_movies())}")
         self.info_label.grid(row=0, column=2, padx=20, pady=10)
 
         # Sol çerçeve
@@ -159,6 +152,8 @@ class FilmApp:
                                                                                                           column=0,
                                                                                                           padx=10,
                                                                                                           pady=20)
+        ttk.Button(self.right_frame, text="Listeleri Göster", command=self.show_lists).grid(row=4, column=0, padx=10, pady=20)
+
 
         # Orta çerçeve
         self.center_frame = tk.Frame(self.root, bg="#2C3E50")
@@ -169,9 +164,9 @@ class FilmApp:
     def switch_category(self, category):
         self.active_category = category
         if category == 'movies':
-            self.info_label.config(text=f"Toplam Filmler: {len(self.movies)}")
+            self.info_label.config(text=f"Toplam Filmler: {len(self.movies_manager.get_movies())}")
         else:
-            self.info_label.config(text=f"Toplam Diziler: {len(self.series)}")
+            self.info_label.config(text=f"Toplam Diziler: {len(self.series_manager.get_movies())}")
         self.load_genres()
 
     def random_recommendation(self):
@@ -187,8 +182,9 @@ class FilmApp:
         loading_window.destroy()
 
         # Rastgele öneri - Seçilen türe göre filtreleme
-        data = self.movies if self.active_category == 'movies' else self.series
+        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
         filtered_data = [item for item in data if self.current_genre in item.get('genre', [])]
+
         if filtered_data:
             recommendation = random.choice(filtered_data)
             messagebox.showinfo("Öneri",
@@ -207,7 +203,7 @@ class FilmApp:
             os.makedirs(folder_path)
 
         # Liste adlarını al
-        existing_lists = [f.split('.')[0] for f in os.listdir(folder_path) if f.endswith('.json')]
+        existing_lists = [""] + [f.split('.')[0] for f in os.listdir(folder_path) if f.endswith('.json')]
 
         tk.Label(add_window, text="Liste Seçin:").pack(pady=5)
         list_name_var = tk.StringVar()
@@ -217,6 +213,14 @@ class FilmApp:
         tk.Label(add_window, text="Yeni Liste Adı Girin:").pack(pady=5)
         new_list_entry = ttk.Entry(add_window)
         new_list_entry.pack(pady=5)
+
+        def toggle_entry_state(event):
+            if list_name_var.get() and list_name_var.get() != "":
+                new_list_entry.config(state="disabled")
+            else:
+                new_list_entry.config(state="normal")
+
+        list_name_combobox.bind("<<ComboboxSelected>>", toggle_entry_state)
 
         tk.Label(add_window, text="Film Ara:").pack(pady=5)
         search_entry = ttk.Entry(add_window)
@@ -228,15 +232,16 @@ class FilmApp:
         def update_results():
             query = search_entry.get().lower()
             result_list.delete(0, tk.END)
-            data = self.movies + self.series
+            data = self.movies_manager.get_movies() + self.series_manager.get_movies()
             for item in data:
                 if query in item['title'].lower():
                     result_list.insert(tk.END, item['title'])
 
         search_entry.bind("<KeyRelease>", lambda event: update_results())
 
+
         def add_to_list():
-            list_name = list_name_var.get().strip() or new_list_entry.get().strip()
+            list_name = list_name_var.get().strip() if list_name_var.get() != "" else new_list_entry.get().strip()
             if not list_name:
                 messagebox.showwarning("Uyarı", "Liste adı boş bırakılamaz!")
                 return
@@ -245,7 +250,7 @@ class FilmApp:
             selected = result_list.get(tk.ACTIVE)
             if selected:
                 data = self.load_json_data(file_path) if os.path.exists(file_path) else []
-                for item in self.movies + self.series:
+                for item in self.movies_manager.get_movies() + self.series_manager.get_movies():
                     if item['title'] == selected and item not in data:
                         data.append(item)
                         break
@@ -254,6 +259,73 @@ class FilmApp:
 
         ttk.Button(add_window, text="Listeye Ekle", command=add_to_list).pack(pady=10)
 
+    def show_lists(self):
+        lists_window = tk.Toplevel(self.root)
+        lists_window.title("Mevcut Listeler")
+        lists_window.geometry("400x300")
+        lists_window.configure(bg="#2C3E50")
+
+        listbox = tk.Listbox(lists_window, font=("Helvetica", 12))
+        listbox.pack(expand=True, fill='both', padx=20, pady=20)
+
+        folder_path = "kullanici_listeleri"
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        lists = [f.split('.')[0] for f in os.listdir(folder_path) if f.endswith('.json')]
+        for lst in lists:
+            listbox.insert(tk.END, lst)
+
+        listbox.bind("<Double-1>", lambda event: self.show_list_content(listbox.get(tk.ACTIVE)))
+
+    def show_list_content(self, list_name):
+        file_path = os.path.join("kullanici_listeleri", f"{list_name}.json")
+        if not os.path.exists(file_path):
+            messagebox.showerror("Hata", "Liste bulunamadı!")
+            return
+
+        manager = FileManager(file_path)
+        data = manager.get_movies()
+
+        # İçerik penceresi oluştur
+        content_window = tk.Toplevel(self.root)
+        content_window.title(f"{list_name} İçeriği")
+        content_window.geometry("600x400")
+        content_window.configure(bg="#2C3E50")
+
+        # Liste kutusu oluştur
+        listbox = tk.Listbox(content_window, font=("Helvetica", 12), height=20)
+        listbox.pack(expand=True, fill='both', padx=20, pady=20)
+
+        # Listeyi doldur
+        for item in data:
+            listbox.insert(tk.END, f"{item['title']} ({item['year']}) - IMDb: {item.get('IMBDrating', 'N/A')}")
+
+        # Silme fonksiyonu
+        def delete_selected_item():
+            selected_index = listbox.curselection()
+            if not selected_index:
+                messagebox.showwarning("Uyarı", "Lütfen bir film seçin!")
+                return
+
+            # Seçilen filmi al
+            selected_item = data[selected_index[0]]['title']
+            manager.remove_movie(selected_item)
+
+            # Listeyi güncelle
+            updated_data = manager.get_movies()
+            listbox.delete(0, tk.END)
+            for item in updated_data:
+                listbox.insert(tk.END, f"{item['title']} ({item['year']}) - IMDb: {item.get('IMBDrating', 'N/A')}")
+
+            messagebox.showinfo("Başarılı", f"'{selected_item}' listeden silindi!")
+
+        # Silme butonu ekle
+        ttk.Button(content_window, text="Seçili Filmi Sil", command=delete_selected_item).pack(pady=10)
+
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
     def save_json_data(self, file_path, data):
         try:
             with open(file_path, 'w', encoding='utf-8') as file:
@@ -268,7 +340,7 @@ class FilmApp:
 
         # Butonlar için grid kullanımı
         row, col = 0, 0
-        data = self.filter_data(self.movies if self.active_category == 'movies' else self.series)
+        data = self.filter_data(self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
         genres = sorted(set(genre for item in data for genre in item['genre']))
 
         for genre in genres:
@@ -284,12 +356,12 @@ class FilmApp:
 
     def show_genre(self, genre):
         self.current_genre = genre
-        data = self.filter_data(self.movies if self.active_category == 'movies' else self.series)
+        data = self.filter_data(self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
         filtered_data = [item for item in data if genre in item['genre']]
         self.display_table(filtered_data)
 
     def show_all(self):
-        data = self.filter_data(self.movies if self.active_category == 'movies' else self.series)
+        data = self.filter_data(self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies())
         self.display_table(data)
 
     def filter_data(self, data):
@@ -312,7 +384,7 @@ class FilmApp:
 
     def show_genre(self, genre):
         self.current_genre = genre
-        data = self.filter_data(self.movies if self.active_category == 'movies' else self.series)
+        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
         filtered_data = [item for item in data if genre in item['genre']]
         self.display_table(filtered_data)
 
@@ -321,7 +393,7 @@ class FilmApp:
             messagebox.showwarning("Uyarı", "Lütfen bir öğe seçin!")
             return
 
-        data = self.movies if self.active_category == 'movies' else self.series
+        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
         item = next((x for x in data if x['title'] == self.selected_item), None)
 
         if item:

@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b2d58e4d-5115-44c5-988e-1050eac7c0ad" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/proje deneme/movie.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proje deneme/temp.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proje deneme/filtered_films.json" beforeDir="false" afterPath="$PROJECT_DIR$/proje deneme/filtered_films.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proje deneme/kullanici_listeleri/as.json" beforeDir="false" afterPath="$PROJECT_DIR$/proje deneme/kullanici_listeleri/as.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proje deneme/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/proje deneme/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -26,16 +31,16 @@
     <option name="openDirectoriesWithSingleClick" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/emrec/OneDrive/Masaüstü/Bilgisayar Ders/2. Sınıf/1. Dönem/Bilgisayar Programlama 2/python_proje/proje deneme&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.main.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/emrec/OneDrive/Masaüstü/Bilgisayar Ders/2. Sınıf/1. Dönem/Bilgisayar Programlama 2/aa"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\emrec\OneDrive\Masaüstü\Bilgisayar Ders\2. Sınıf\1. Dönem\Bilgisayar Programlama 2\python_proje" />

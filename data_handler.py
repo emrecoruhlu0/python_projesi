@@ -1,4 +1,4 @@
-"""import json
+import json
 from movie import MovieTVShow
 
 import json
@@ -44,19 +44,12 @@ new_movie = MovieTVShow(
 add_movie(file_path, new_movie)
 
 
-"""
 
 import json
 from movie import MovieTVShow
 
 
 def read_file(json_file_path):
-    """
-    Bir JSON dosyasını okuyarak Python veri yapısına (dict veya list) dönüştürür.
-
-    :param json_file_path: JSON dosyasının yolu (string)
-    :return: Okunmuş JSON verisi (dict veya list) veya boş liste
-    """
     try:
         with open(json_file_path, 'r', encoding='utf-8') as f:
             readed_json = json.load(f)
@@ -74,12 +67,7 @@ def read_file(json_file_path):
 
 
 def add_movie(json_file_path, new_movie):
-    """
-    Mevcut bir JSON dosyasına yeni bir film ekler ve eski verileri korur.
 
-    :param json_file_path: JSON dosyasının yolu (string)
-    :param new_movie: Eklenecek film (MovieTVShow sınıfı örneği)
-    """
     # Mevcut verileri oku
     data = read_file(json_file_path)
 
