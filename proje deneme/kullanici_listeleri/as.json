@@ -1,0 +1,32 @@
+[
+    {
+        "title": "I Came By",
+        "year": "2022",
+        "genre": [
+            "Thriller"
+        ],
+        "IMBDrating": "6.1",
+        "stars": [
+            "Babak Anvari"
+        ],
+        "state": true,
+        "userRating": 0,
+        "note": ""
+    },
+    {
+        "title": "Jurassic Park",
+        "year": "1993",
+        "genre": [
+            "Action",
+            "Adventure",
+            "Sci-Fi"
+        ],
+        "IMBDrating": "8.2",
+        "stars": [
+            "Steven Spielberg"
+        ],
+        "state": true,
+        "userRating": 0,
+        "note": ""
+    }
+]

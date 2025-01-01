@@ -4,12 +4,15 @@ import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk
 import random
+import os
 
 # JSON dosyasındaki kullanıcı bilgileri
 USERS = {
     "a": "11",
     "user": "password"
 }
+
+
 
 
 class FilmApp:
@@ -113,7 +116,7 @@ class FilmApp:
                 item['rating'] = rating
                 item['comment'] = comment_entry.get("1.0", tk.END).strip()
                 item['watched'] = watched_var.get()
-                self.save_json_data()
+                save_json_data()
                 review_window.destroy()
                 messagebox.showinfo("Başarılı", "Veriler kaydedildi!")
 
@@ -130,8 +133,10 @@ class FilmApp:
         top_frame = tk.Frame(self.root, bg="#34495E")
         top_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
 
-        ttk.Button(top_frame, text="Filmler", command=lambda: self.switch_category('movies')).grid(row=0, column=0, padx=20, pady=10)
-        ttk.Button(top_frame, text="Diziler", command=lambda: self.switch_category('series')).grid(row=0, column=1, padx=20, pady=10)
+        ttk.Button(top_frame, text="Filmler", command=lambda: self.switch_category('movies')).grid(row=0, column=0,
+                                                                                                   padx=20, pady=10)
+        ttk.Button(top_frame, text="Diziler", command=lambda: self.switch_category('series')).grid(row=0, column=1,
+                                                                                                   padx=20, pady=10)
 
         self.info_label = ttk.Label(top_frame, text=f"Toplam Filmler: {len(self.movies)}")
         self.info_label.grid(row=0, column=2, padx=20, pady=10)
@@ -144,9 +149,16 @@ class FilmApp:
         self.right_frame = tk.Frame(self.root, width=200, bg="#1F3A52")
         self.right_frame.grid(row=1, column=2, sticky="ns")
 
-        ttk.Button(self.right_frame, text="Detaylara Bak", command=self.show_details).grid(row=0, column=0, padx=10, pady=20)
-        ttk.Button(self.right_frame, text="Yorum veya Puan Ekle", command=self.add_review).grid(row=1, column=0, padx=10, pady=20)
-        ttk.Button(self.right_frame, text="Rastgele Öner", command=self.random_recommendation).grid(row=2, column=0, padx=10, pady=20)
+        ttk.Button(self.right_frame, text="Detaylara Bak", command=self.show_details).grid(row=0, column=0, padx=10,
+                                                                                           pady=20)
+        ttk.Button(self.right_frame, text="Yorum veya Puan Ekle", command=self.add_review).grid(row=1, column=0,
+                                                                                                padx=10, pady=20)
+        ttk.Button(self.right_frame, text="Rastgele Öner", command=self.random_recommendation).grid(row=2, column=0,
+                                                                                                    padx=10, pady=20)
+        ttk.Button(self.right_frame, text="Listeye Film Ekle", command=self.open_add_to_list_window).grid(row=3,
+                                                                                                          column=0,
+                                                                                                          padx=10,
+                                                                                                          pady=20)
 
         # Orta çerçeve
         self.center_frame = tk.Frame(self.root, bg="#2C3E50")
@@ -174,13 +186,81 @@ class FilmApp:
         time.sleep(2)
         loading_window.destroy()
 
-        # Rastgele öneri
+        # Rastgele öneri - Seçilen türe göre filtreleme
         data = self.movies if self.active_category == 'movies' else self.series
-        if data:
-            recommendation = random.choice(data)
-            messagebox.showinfo("Öneri", f"Başlık: {recommendation['title']}, Yıl: {recommendation['year']}, Puan: {recommendation.get('IMBDrating', 'N/A')}")
+        filtered_data = [item for item in data if self.current_genre in item.get('genre', [])]
+        if filtered_data:
+            recommendation = random.choice(filtered_data)
+            messagebox.showinfo("Öneri",
+                                f"Başlık: {recommendation['title']}, Yıl: {recommendation['year']}, Puan: {recommendation.get('IMBDrating', 'N/A')}")
         else:
-            messagebox.showinfo("Bilgi", "Öneri bulunamadı.")
+            messagebox.showinfo("Bilgi", "Seçilen türde öneri bulunamadı.")
+
+    def open_add_to_list_window(self):
+        add_window = tk.Toplevel(self.root)
+        add_window.title("Listeye Film Ekle")
+        add_window.geometry("400x400")
+
+        # Dosya konumunu belirt
+        folder_path = "kullanici_listeleri"
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        # Liste adlarını al
+        existing_lists = [f.split('.')[0] for f in os.listdir(folder_path) if f.endswith('.json')]
+
+        tk.Label(add_window, text="Liste Seçin:").pack(pady=5)
+        list_name_var = tk.StringVar()
+        list_name_combobox = ttk.Combobox(add_window, textvariable=list_name_var, values=existing_lists)
+        list_name_combobox.pack(pady=5)
+
+        tk.Label(add_window, text="Yeni Liste Adı Girin:").pack(pady=5)
+        new_list_entry = ttk.Entry(add_window)
+        new_list_entry.pack(pady=5)
+
+        tk.Label(add_window, text="Film Ara:").pack(pady=5)
+        search_entry = ttk.Entry(add_window)
+        search_entry.pack(pady=5)
+
+        result_list = tk.Listbox(add_window, height=15)
+        result_list.pack(pady=10)
+
+        def update_results():
+            query = search_entry.get().lower()
+            result_list.delete(0, tk.END)
+            data = self.movies + self.series
+            for item in data:
+                if query in item['title'].lower():
+                    result_list.insert(tk.END, item['title'])
+
+        search_entry.bind("<KeyRelease>", lambda event: update_results())
+
+        def add_to_list():
+            list_name = list_name_var.get().strip() or new_list_entry.get().strip()
+            if not list_name:
+                messagebox.showwarning("Uyarı", "Liste adı boş bırakılamaz!")
+                return
+
+            file_path = os.path.join(folder_path, f"{list_name}.json")
+            selected = result_list.get(tk.ACTIVE)
+            if selected:
+                data = self.load_json_data(file_path) if os.path.exists(file_path) else []
+                for item in self.movies + self.series:
+                    if item['title'] == selected and item not in data:
+                        data.append(item)
+                        break
+                self.save_json_data(file_path, data)
+                messagebox.showinfo("Başarılı", f"{selected} listeye eklendi!")
+
+        ttk.Button(add_window, text="Listeye Ekle", command=add_to_list).pack(pady=10)
+
+    def save_json_data(self, file_path, data):
+        try:
+            with open(file_path, 'w', encoding='utf-8') as file:
+                json.dump(data, file, indent=4)
+            messagebox.showinfo("Başarılı", f"Liste başarıyla {file_path} dosyasına kaydedildi!")
+        except Exception as e:
+            messagebox.showerror("Hata", f"Dosya kaydedilirken bir hata oluştu: {str(e)}")
 
     def load_genres(self):
         for widget in self.left_frame.winfo_children():
@@ -251,7 +331,8 @@ class FilmApp:
             detail_window.configure(bg="#2C3E50")
 
             # Başlık
-            tk.Label(detail_window, text=item['title'], font=("Helvetica", 16, "bold"), bg="#2C3E50", fg="white").pack(pady=10)
+            tk.Label(detail_window, text=item['title'], font=("Helvetica", 16, "bold"), bg="#2C3E50", fg="white").pack(
+                pady=10)
 
             # İçerik
             details = [
@@ -267,14 +348,9 @@ class FilmApp:
             for label, value in details:
                 frame = tk.Frame(detail_window, bg="#34495E")
                 frame.pack(fill="x", padx=20, pady=5)
-                tk.Label(frame, text=f"{label}: ", font=("Helvetica", 12, "bold"), bg="#34495E", fg="white").pack(side="left")
+                tk.Label(frame, text=f"{label}: ", font=("Helvetica", 12, "bold"), bg="#34495E", fg="white").pack(
+                    side="left")
                 tk.Label(frame, text=value, font=("Helvetica", 12), bg="#34495E", fg="white").pack(side="left")
-
-    def save_json_data(self):
-        with open("filtered_films.json", 'w', encoding='utf-8') as file:
-            json.dump(self.movies, file, indent=4)
-        with open("filtered_series.json", 'w', encoding='utf-8') as file:
-            json.dump(self.series, file, indent=4)
 
     def display_table(self, data):
         for widget in self.center_frame.winfo_children():
