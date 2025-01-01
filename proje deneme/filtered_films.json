@@ -202,7 +202,10 @@
         ],
         "state": true,
         "userRating": 0,
-        "note": ""
+        "note": "",
+        "rating": 10,
+        "comment": "iyi film",
+        "watched": true
     },
     {
         "title": "Diario de un Gigoló",

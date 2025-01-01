@@ -14,10 +14,11 @@ USERS = {
 
 class FilmApp:
     def __init__(self, root):
+        self.current_user = None
         self.movies_manager = None
         self.root = root
         self.root.title("Film ve Dizi Yönetim Uygulaması")
-        self.root.geometry("1000x700")
+        self.root.geometry("1200x800")  # Uygulama boyutu genişletildi
         self.movies_manager = FileManager("filtered_films.json")
         self.series_manager = FileManager("filtered_series.json")
         self.current_genre = None
@@ -51,6 +52,13 @@ class FilmApp:
         password = self.password_entry.get()
 
         if username in USERS and USERS[username] == password:
+            self.current_user = username  # Aktif kullanıcıyı kaydet
+
+            # Kullanıcıya özel klasör oluştur
+            user_folder = os.path.join("kullanici_listeleri", self.current_user)
+            if not os.path.exists(user_folder):
+                os.makedirs(user_folder)  # Klasör oluştur
+
             messagebox.showinfo("Başarılı", "Giriş başarılı!")
             self.create_main_page()
         else:
@@ -61,8 +69,8 @@ class FilmApp:
             messagebox.showwarning("Uyarı", "Lütfen bir öğe seçin!")
             return
 
-        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
-        item = next((x for x in data if x['title'] == self.selected_item), None)
+        manager = self.movies_manager if self.active_category == 'movies' else self.series_manager
+        item = manager.find_movie(self.selected_item)  # find_movie kullanıldı
 
         if item:
             review_window = tk.Toplevel(self.root)
@@ -108,8 +116,7 @@ class FilmApp:
                 item['watched'] = watched_var.get()
 
                 # Güncelleme ve kaydetme işlemi
-                manager = self.movies_manager if self.active_category == 'movies' else self.series_manager
-                manager.write_file(data)  # JSON dosyasına yaz
+                manager.write_file(manager.get_movies())  # JSON dosyasına yaz
                 review_window.destroy()
                 messagebox.showinfo("Başarılı", "Veriler kaydedildi!")
 
@@ -195,15 +202,15 @@ class FilmApp:
     def open_add_to_list_window(self):
         add_window = tk.Toplevel(self.root)
         add_window.title("Listeye Film Ekle")
-        add_window.geometry("400x400")
+        add_window.geometry("600x600")
 
-        # Dosya konumunu belirt
-        folder_path = "kullanici_listeleri"
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        # Kullanıcıya özel klasör yolu
+        user_folder = os.path.join("kullanici_listeleri", self.current_user)
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
 
         # Liste adlarını al
-        existing_lists = [""] + [f.split('.')[0] for f in os.listdir(folder_path) if f.endswith('.json')]
+        existing_lists = [""] + [f.split('.')[0] for f in os.listdir(user_folder) if f.endswith('.json')]
 
         tk.Label(add_window, text="Liste Seçin:").pack(pady=5)
         list_name_var = tk.StringVar()
@@ -239,14 +246,13 @@ class FilmApp:
 
         search_entry.bind("<KeyRelease>", lambda event: update_results())
 
-
         def add_to_list():
             list_name = list_name_var.get().strip() if list_name_var.get() != "" else new_list_entry.get().strip()
             if not list_name:
                 messagebox.showwarning("Uyarı", "Liste adı boş bırakılamaz!")
                 return
 
-            file_path = os.path.join(folder_path, f"{list_name}.json")
+            file_path = os.path.join(user_folder, f"{list_name}.json")
             selected = result_list.get(tk.ACTIVE)
             if selected:
                 data = self.load_json_data(file_path) if os.path.exists(file_path) else []
@@ -262,63 +268,91 @@ class FilmApp:
     def show_lists(self):
         lists_window = tk.Toplevel(self.root)
         lists_window.title("Mevcut Listeler")
-        lists_window.geometry("400x300")
+        lists_window.geometry("1000x600")
         lists_window.configure(bg="#2C3E50")
 
         listbox = tk.Listbox(lists_window, font=("Helvetica", 12))
         listbox.pack(expand=True, fill='both', padx=20, pady=20)
 
-        folder_path = "kullanici_listeleri"
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        # Kullanıcıya özel klasör yolu
+        user_folder = os.path.join("kullanici_listeleri", self.current_user)
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
 
-        lists = [f.split('.')[0] for f in os.listdir(folder_path) if f.endswith('.json')]
+        lists = [f.split('.')[0] for f in os.listdir(user_folder) if f.endswith('.json')]
         for lst in lists:
             listbox.insert(tk.END, lst)
 
         listbox.bind("<Double-1>", lambda event: self.show_list_content(listbox.get(tk.ACTIVE)))
 
     def show_list_content(self, list_name):
-        file_path = os.path.join("kullanici_listeleri", f"{list_name}.json")
+        # Kullanıcının klasörünü al
+        user_folder = os.path.join("kullanici_listeleri", self.current_user)
+        file_path = os.path.join(user_folder, f"{list_name}.json")
+
         if not os.path.exists(file_path):
             messagebox.showerror("Hata", "Liste bulunamadı!")
             return
 
+        # Liste verilerini yükle
         manager = FileManager(file_path)
         data = manager.get_movies()
 
         # İçerik penceresi oluştur
         content_window = tk.Toplevel(self.root)
         content_window.title(f"{list_name} İçeriği")
-        content_window.geometry("600x400")
+        content_window.geometry("1400x700")  # İçerik penceresi genişletildi
         content_window.configure(bg="#2C3E50")
 
-        # Liste kutusu oluştur
-        listbox = tk.Listbox(content_window, font=("Helvetica", 12), height=20)
-        listbox.pack(expand=True, fill='both', padx=20, pady=20)
+        # Tablo oluştur
+        tree = ttk.Treeview(content_window, columns=("title", "year", "IMBDrating", "genre", "stars", "rating", "comment", "watched"), show='headings')
+        tree.heading("title", text="Başlık")
+        tree.heading("year", text="Yıl")
+        tree.heading("IMBDrating", text="IMDb Puanı")
+        tree.heading("genre", text="Tür")
+        tree.heading("stars", text="Oyuncular")
+        tree.heading("rating", text="Puan")
+        tree.heading("comment", text="Yorum")
+        tree.heading("watched", text="İzlendi")
 
-        # Listeyi doldur
+        tree.column("title", width=200)
+        tree.column("year", width=100)
+        tree.column("IMBDrating", width=100)
+        tree.column("genre", width=150)
+        tree.column("stars", width=200)
+        tree.column("rating", width=100)
+        tree.column("comment", width=300)
+        tree.column("watched", width=100)
+
+        tree.pack(expand=True, fill='both', padx=20, pady=20)
+
+        # Verileri ekle
         for item in data:
-            listbox.insert(tk.END, f"{item['title']} ({item['year']}) - IMDb: {item.get('IMBDrating', 'N/A')}")
+            tree.insert("", "end", values=(
+                item['title'],
+                item.get('year', 'N/A'),
+                item.get('IMBDrating', 'N/A'),
+                ', '.join(item.get('genre', [])),
+                ', '.join(item.get('stars', [])),
+                item.get('rating', 'N/A'),
+                item.get('comment', 'N/A'),
+                'Evet' if item.get('watched', False) else 'Hayır'
+            ))
 
         # Silme fonksiyonu
         def delete_selected_item():
-            selected_index = listbox.curselection()
-            if not selected_index:
+            selected_item = tree.selection()
+            if not selected_item:
                 messagebox.showwarning("Uyarı", "Lütfen bir film seçin!")
                 return
 
             # Seçilen filmi al
-            selected_item = data[selected_index[0]]['title']
-            manager.remove_movie(selected_item)
+            selected_title = tree.item(selected_item, 'values')[0]
+            manager.remove_movie(selected_title)
 
-            # Listeyi güncelle
-            updated_data = manager.get_movies()
-            listbox.delete(0, tk.END)
-            for item in updated_data:
-                listbox.insert(tk.END, f"{item['title']} ({item['year']}) - IMDb: {item.get('IMBDrating', 'N/A')}")
-
-            messagebox.showinfo("Başarılı", f"'{selected_item}' listeden silindi!")
+            # Tabloyu güncelle
+            tree.delete(selected_item)
+            messagebox.showinfo("Başarılı", f"'{selected_title}' listeden silindi!")
 
         # Silme butonu ekle
         ttk.Button(content_window, text="Seçili Filmi Sil", command=delete_selected_item).pack(pady=10)
@@ -393,8 +427,8 @@ class FilmApp:
             messagebox.showwarning("Uyarı", "Lütfen bir öğe seçin!")
             return
 
-        data = self.movies_manager.get_movies() if self.active_category == 'movies' else self.series_manager.get_movies()
-        item = next((x for x in data if x['title'] == self.selected_item), None)
+        manager = self.movies_manager if self.active_category == 'movies' else self.series_manager
+        item = manager.find_movie(self.selected_item)  # find_movie kullanıldı
 
         if item:
             detail_window = tk.Toplevel(self.root)
