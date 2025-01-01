@@ -122,26 +122,33 @@ class FilmApp:
     def create_main_page(self):
         self.clear_window()
 
-        # Üst kısımda kategori seçimi
+        # Grid yapılandırması
+        self.root.columnconfigure(1, weight=1)
+        self.root.rowconfigure(1, weight=1)
+
+        # Üst çerçeve
         top_frame = tk.Frame(self.root, bg="#34495E")
         top_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
-        ttk.Button(top_frame, text="Filmler", command=lambda: self.switch_category('movies')).grid(row=0, column=0,
-                                                                                                   padx=20, pady=10)
-        ttk.Button(top_frame, text="Diziler", command=lambda: self.switch_category('series')).grid(row=0, column=1,
-                                                                                                   padx=20, pady=10)
+
+        ttk.Button(top_frame, text="Filmler", command=lambda: self.switch_category('movies')).grid(row=0, column=0, padx=20, pady=10)
+        ttk.Button(top_frame, text="Diziler", command=lambda: self.switch_category('series')).grid(row=0, column=1, padx=20, pady=10)
 
         self.info_label = ttk.Label(top_frame, text=f"Toplam Filmler: {len(self.movies)}")
         self.info_label.grid(row=0, column=2, padx=20, pady=10)
 
-        # Sol taraftaki tür butonları için frame
+        # Sol çerçeve
         self.left_frame = tk.Frame(self.root, bg="#34495E")
         self.left_frame.grid(row=1, column=0, sticky="ns")
 
-        # Sağ tarafta butonlar
+        # Sağ çerçeve
         self.right_frame = tk.Frame(self.root, width=200, bg="#1F3A52")
         self.right_frame.grid(row=1, column=2, sticky="ns")
 
-        # Orta alanda tablo
+        ttk.Button(self.right_frame, text="Detaylara Bak", command=self.show_details).grid(row=0, column=0, padx=10, pady=20)
+        ttk.Button(self.right_frame, text="Yorum veya Puan Ekle", command=self.add_review).grid(row=1, column=0, padx=10, pady=20)
+        ttk.Button(self.right_frame, text="Rastgele Öner", command=self.random_recommendation).grid(row=2, column=0, padx=10, pady=20)
+
+        # Orta çerçeve
         self.center_frame = tk.Frame(self.root, bg="#2C3E50")
         self.center_frame.grid(row=1, column=1, sticky="nsew")
 
@@ -156,15 +163,24 @@ class FilmApp:
         self.load_genres()
 
     def random_recommendation(self):
+        # Bekleme ekranı
+        loading_window = tk.Toplevel(self.root)
+        loading_window.title("Öneri Bekleniyor")
+        loading_window.geometry("300x100")
+        tk.Label(loading_window, text="Öneri hazırlanıyor...", font=("Helvetica", 12)).pack(expand=True)
+        self.root.update_idletasks()
+
+        # 2 saniye bekle
+        time.sleep(2)
+        loading_window.destroy()
+
+        # Rastgele öneri
         data = self.movies if self.active_category == 'movies' else self.series
-        if not data:
+        if data:
+            recommendation = random.choice(data)
+            messagebox.showinfo("Öneri", f"Başlık: {recommendation['title']}, Yıl: {recommendation['year']}, Puan: {recommendation.get('IMBDrating', 'N/A')}")
+        else:
             messagebox.showinfo("Bilgi", "Öneri bulunamadı.")
-            return
-        recommendation = random.choice(data)
-        messagebox.showinfo(
-            "Rastgele Öneri",
-            f"Başlık: {recommendation['title']}\nYıl: {recommendation['year']}\nIMDb Puanı: {recommendation['IMBDrating']}"
-        )
 
     def load_genres(self):
         for widget in self.left_frame.winfo_children():
@@ -179,7 +195,7 @@ class FilmApp:
             btn = ttk.Button(self.left_frame, text=genre, command=lambda g=genre: self.show_genre(g))
             btn.grid(row=row, column=col, padx=5, pady=5, sticky="ew")
             col += 1
-            if col > 1:  # 2 sütun olacak şekilde ayarla
+            if col > 2:  # 2 sütun olacak şekilde ayarla
                 col = 0
                 row += 1
 
@@ -274,6 +290,11 @@ class FilmApp:
             self.tree.insert("", "end", values=(item['title'], item['year'], item['IMBDrating']))
 
         self.tree.pack(expand=True, fill='both')
+        self.tree.bind("<ButtonRelease-1>", self.select_item)
+
+    def select_item(self, event):
+        selected_item = self.tree.selection()[0]
+        self.selected_item = self.tree.item(selected_item, 'values')[0]
 
     def load_json_data(self, file_path):
         try:
